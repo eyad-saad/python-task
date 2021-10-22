@@ -1,0 +1,28 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - .:/var/www/webapp
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: django
+      MYSQL_DATABASE: django
+      MYSQL_USER: django
+      MYSQL_PASSWORD: django
+  web:
+    build: .
+    command: sh -c "./wait-for-it.sh db:3306; python3 manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/var/www/webapp
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - pubsub
+  pubsub:
+    build: pubsub
+    command: gcloud beta emulators pubsub start --project=scenic-style-324209 --host-port=0.0.0.0:8085
+    ports:
+      - "8085:8085"
